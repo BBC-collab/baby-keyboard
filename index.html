@@ -4,205 +4,271 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>아기 한글 & 숫자 놀이</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
   <style>
-    body { margin: 0; overflow: hidden; background-color: #2b2b2b; font-family: 'Malgun Gothic', sans-serif; user-select: none; touch-action: none; }
+    body { margin: 0; overflow: hidden; background-color: #1a1a1a; font-family: 'Jua', sans-serif; user-select: none; touch-action: none; color: white; }
     
-    #esc-guide { position: absolute; top: 2vw; left: 50%; transform: translateX(-50%); color: rgba(255, 255, 255, 0.2); font-size: 1.5vw; z-index: 60; pointer-events: none; display: none; }
-    #combo-ui { position: absolute; top: 3vw; right: 3vw; color: #ffb74d; font-size: 3vw; font-weight: bold; z-index: 50; text-shadow: 0.2vw 0.2vw 0.4vw rgba(0,0,0,0.5); pointer-events: none; display: none; }
+    #start-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(26, 26, 26, 0.5); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; cursor: pointer; text-align: center; }
+    .start-text { font-size: clamp(2rem, 8vw, 5rem); color: #ffb74d; animation: bounce 1.5s infinite; text-shadow: 0 0.5vw 1vw rgba(0,0,0,0.5); }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
     
-    #start-screen, #result-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; cursor: pointer; text-align: center; }
-    #start-screen { background-color: #2b2b2b; color: #ffb74d; font-size: 5vw; font-weight: bold; border: 1vw solid #333; box-sizing: border-box; }
-    #result-screen { background-color: rgba(0, 0, 0, 0.95); color: white; display: none; }
+    #settings-btn { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; font-size: clamp(1rem, 2vw, 1.5rem); color: rgba(255,255,255,0.6); cursor: pointer; z-index: 1000; transition: 0.3s; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 10px; }
+    #settings-btn:hover { color: #fff; transform: scale(1.05); background: rgba(0,0,0,0.5); }
+
+    #combo-ui { position: absolute; top: 20px; left: 20px; color: #ffb74d; font-size: clamp(1.5rem, 4vw, 3rem); z-index: 50; pointer-events: none; display: none; }
+    #esc-guide { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: rgba(255, 255, 255, 0.15); font-size: 1rem; z-index: 60; pointer-events: none; display: none; }
     
-    .result-box { background: #444; padding: 4vw; border-radius: 3vw; border: 0.5vw solid #ffb74d; }
-    .result-title { font-size: 4vw; margin-bottom: 2vw; color: #ffb74d; }
-    .count-text { font-size: 6vw; margin-bottom: 4vw; }
+    /* 하단 워터마크 수정 */
+    #creator-watermark { position: fixed; bottom: 10px; right: 15px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.3); z-index: 3000; pointer-events: none; opacity: 1; transition: opacity 0.5s; }
+
+    /* 모달 레이아웃 고정 (fixed 사용으로 화면 전체 덮음) */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; opacity: 0; transition: opacity 0.3s; }
+    .modal-overlay.show { opacity: 1; }
     
-    .btn-group { display: flex; gap: 2vw; justify-content: center; }
-    button { padding: 1.5vw 3vw; font-size: 2vw; border-radius: 1.5vw; border: none; cursor: pointer; font-weight: bold; }
-    .btn-share { background-color: #448AFF; color: white; }
-    .btn-restart { background-color: #69F0AE; color: #333; }
+    .modal-box { background: #333; border: 3px solid #ffb74d; padding: 40px 20px; border-radius: 30px; text-align: center; width: 90%; max-width: 450px; box-sizing: border-box; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+    .modal-title { font-size: 2.5rem; margin-bottom: 30px; color: #ffb74d; word-break: keep-all; }
+
+    .settings-section { text-align: left; margin-bottom: 30px; }
+    .settings-label { font-size: 1.2rem; color: rgba(255,255,255,0.9); margin-bottom: 15px; display: block; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px; }
     
-    #creator-watermark { position: absolute; bottom: 1.5vw; right: 2vw; font-size: 1.2vw; color: rgba(255, 255, 255, 0.15); pointer-events: auto; letter-spacing: 0.05vw; }
+    .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .theme-item { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .theme-item input { width: 20px; height: 20px; accent-color: #ffb74d; margin: 0; }
     
-    .letter { position: absolute; font-weight: 900; pointer-events: none; animation: popOut 1.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards; }
+    .volume-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .volume-item { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+
+    .report-stat-container { width: 100%; display: flex; justify-content: center; margin-bottom: 30px; }
+    .report-stat-grid { display: flex; flex-direction: column; gap: 15px; width: 100%; }
+    .stat-row { display: flex; justify-content: center; align-items: center; gap: 15px; font-size: 1.5rem; width: 100%; }
+    .stat-label { color: rgba(255,255,255,0.7); flex: 1; text-align: right; }
+    .stat-value { color: #00E676; font-weight: bold; flex: 1; text-align: left; }
+
+    .report-title-box { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 10px; width: 100%; min-height: 120px; display: flex; flex-direction: column; justify-content: center; }
+    .report-sub-title { font-size: 1.1rem; color: #aaa; margin-bottom: 5px; }
+    .report-title-text { font-size: 2.2rem; color: #EEFF41; text-shadow: 0 0 15px rgba(238,255,65,0.4); line-height: 1.3; word-break: keep-all; }
+    
+    .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 30px; }
+    button { font-family: 'Jua', sans-serif; padding: 12px 25px; font-size: 1.2rem; border-radius: 12px; border: none; cursor: pointer; transition: 0.2s; }
+    .btn-blue { background-color: #2979FF; color: white; }
+    .btn-green { background-color: #00E676; color: #1a1a1a; }
+    .btn-save { background-color: #ffb74d; color: #1a1a1a; width: 100%; margin-top: 10px; font-size: 1.5rem; }
+
+    .letter { position: absolute; font-weight: 900; pointer-events: none; animation: popOut 1.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards; z-index: 10; }
     @keyframes popOut { 0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
-    
-    .bg-element { position: absolute; opacity: 0.08; pointer-events: none; z-index: -1; animation: float linear infinite; }
+    .bg-element { position: absolute; opacity: 0.1; pointer-events: none; z-index: -1; animation: float linear infinite; }
     @keyframes float { 0% { transform: translateY(110vh) rotate(0deg); } 100% { transform: translateY(-10vh) rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <div id="esc-guide">ESC 키를 누르면 전체화면이 종료됩니다</div>
-  <div id="combo-ui">팡팡: 0</div>
-  <div id="start-screen">화면을 터치하거나 키보드를 눌러 시작!</div>
+  <div id="creator-watermark">개발 : bunnyboxcommerce@gmail.com</div>
+  <div id="settings-btn"><span>⚙️</span> 설정</div>
 
-  <div id="result-screen">
-    <div class="result-box">
-      <div class="result-title">참 잘했어요!</div>
-      <div class="count-text">총 <span id="final-count">0</span>번 눌렀어요</div>
+  <div id="start-screen">
+    <div class="start-text">아무 키나 눌러 시작!</div>
+  </div>
+
+  <div id="combo-ui">팡팡: 0</div>
+  <div id="esc-guide">종료하려면 ESC 키를 누르세요</div>
+
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-title">설정</div>
+      <div class="settings-section">
+        <span class="settings-label">테마 선택</span>
+        <div class="theme-grid">
+          <label class="theme-item"><input type="checkbox" value="animal" checked> 🐶 동물</label>
+          <label class="theme-item"><input type="checkbox" value="food" checked> 🍎 음식</label>
+          <label class="theme-item"><input type="checkbox" value="vehicle" checked> 🚗 탈것</label>
+          <label class="theme-item"><input type="checkbox" value="object" checked> ⌚ 사물</label>
+          <label class="theme-item"><input type="checkbox" value="nature" checked> 🌈 자연</label>
+        </div>
+      </div>
+      <div class="settings-section">
+        <span class="settings-label">소리 조절</span>
+        <div class="volume-group">
+          <label class="volume-item"><input type="radio" name="vol" value="0"> 끄기</label>
+          <label class="volume-item"><input type="radio" name="vol" value="0.05"> 작게</label>
+          <label class="volume-item"><input type="radio" name="vol" value="0.15" checked> 중간</label>
+          <label class="volume-item"><input type="radio" name="vol" value="0.3"> 크게</label>
+        </div>
+      </div>
+      <button class="btn-save" onclick="closeSettings()">저장하고 닫기</button>
+    </div>
+  </div>
+
+  <div id="result-screen" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-title">✨ 놀이 결과 보고서</div>
+      <div class="report-stat-container">
+        <div class="report-stat-grid">
+          <div class="stat-row">
+            <span class="stat-label">⏱️ 플레이 시간 :</span> 
+            <span id="report-time" class="stat-value">0초</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">🖐️ 총 누른 횟수 :</span> 
+            <span id="report-count" class="stat-value">0번</span>
+          </div>
+        </div>
+      </div>
+      <div class="report-title-box">
+        <div class="report-sub-title">아기의 칭호는...</div>
+        <div id="report-title" class="report-title-text">칭호 계산 중...</div>
+      </div>
       <div class="btn-group">
-        <button class="btn-share" onclick="shareSite()">친구에게 공유하기</button>
-        <button class="btn-restart" onclick="location.reload()">다시 놀기</button>
+        <button class="btn-blue" onclick="shareSite()">공유하기</button>
+        <button class="btn-green" onclick="location.reload()">다시 놀기</button>
       </div>
     </div>
-    <div id="creator-watermark">개발 및 제휴 문의: bunnyboxcommerce@gmail.com</div>
   </div>
 
   <script>
-    const startScreen = document.getElementById('start-screen'), resultScreen = document.getElementById('result-screen');
-    const finalCountEl = document.getElementById('final-count'), comboUi = document.getElementById('combo-ui'), escGuide = document.getElementById('esc-guide');
-    let audioCtx, isStarted = false, pressCount = 0;
+    const startScreen = document.getElementById('start-screen'), settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal'), resultScreen = document.getElementById('result-screen');
+    const comboUi = document.getElementById('combo-ui'), escGuide = document.getElementById('esc-guide'), watermark = document.getElementById('creator-watermark');
+    let audioCtx, isStarted = false, isSettingsOpen = false, pressCount = 0, startTime = 0, currentVolume = 0.15;
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    const bgEmojis = ['⭐', '🪐', '🌙', '☄️', '🚀', '✨', '🌍', '🛸'];
+    const emojiDB = { animal: ['🐶','🐱','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐣','🐔','🐧','🐦','🐤','🦆','🦅'], food: ['🍎','🍓','🍒','🍉','🍇','🍌','🍍','🥝','🍅','🌽','🥕','🍕','🍔','🍟','🍦','🍩','🍰','🍭','🍱','🍙'], vehicle: ['🚗','🚕','🚙','🚌','🚒','🚓','🚑','🚜','🚲','🚀','⛵','✈️','🛸','🚂','🛶'], object: ['⌚','💻','📱','☕','🎸','🎨','⚽','🏀','💎','💡','📖','✏️','🔍','🎒','🎁','🎈','🧸','🥁','🎷','🎺','🎻','🎮','🏠','🏰','🎡'], nature: ['🌈','🌻','☀️','❄️','💧','🍀','🌵','🍁','🍄','🌎','🌙','⭐','☁️','⛈️','🌩️','🌋','🌊','☄️','🔭','🛸','🎍','🎋','🍃','🌴','🐚','🐠','🐙','🐳','🐉','🐾'] };
+    const colors = ['#FF5252','#FF4081','#E040FB','#7C4DFF','#536DFE','#448AFF','#18FFFF','#69F0AE','#EEFF41','#FFD740','#FFAB40'];
+    let activeEmojis = []; updateActiveEmojis();
+
+    const codeMap = { 
+      'Digit1':'1','Digit2':'2','Digit3':'3','Digit4':'4','Digit5':'5','Digit6':'6','Digit7':'7','Digit8':'8','Digit9':'9','Digit0':'0', 
+      'Numpad1':'1','Numpad2':'2','Numpad3':'3','Numpad4':'4','Numpad5':'5','Numpad6':'6','Numpad7':'7','Numpad8':'8','Numpad9':'9','Numpad0':'0', 
+      'KeyQ':'ㅂ','KeyW':'ㅈ','KeyE':'ㄷ','KeyR':'ㄱ','KeyT':'ㅅ','KeyY':'ㅛ','KeyU':'ㅕ','KeyI':'ㅑ','KeyO':'ㅐ','KeyP':'ㅔ', 
+      'KeyA':'ㅁ','KeyS':'ㄴ','KeyD':'ㅇ','KeyF':'ㄹ','KeyG':'ㅎ','KeyH':'ㅗ','KeyJ':'ㅓ','KeyK':'ㅏ','KeyL':'ㅣ', 
+      'KeyZ':'ㅋ','KeyX':'ㅌ','KeyC':'ㅊ','KeyV':'ㅍ','KeyB':'ㅠ','KeyN':'ㅜ','KeyM':'ㅡ' 
+    };
+
     for (let i = 0; i < 40; i++) {
-      const el = document.createElement('div');
-      el.textContent = bgEmojis[Math.floor(Math.random() * bgEmojis.length)];
-      el.className = 'bg-element'; el.style.left = `${Math.random() * 100}vw`;
-      el.style.animationDuration = `${15 + Math.random() * 23}s`; el.style.animationDelay = `-${Math.random() * 30}s`;
-      el.style.fontSize = `${2 + Math.random() * 3}vw`; document.body.appendChild(el);
+      const el = document.createElement('div'); el.textContent = ['⭐','🪐','🌙','☄️','🚀','✨','🌍','🛸'][Math.floor(Math.random() * 8)]; el.className = 'bg-element'; el.style.left = `${Math.random() * 100}vw`; el.style.animationDuration = `${15 + Math.random() * 23}s`; el.style.animationDelay = `-${Math.random() * 30}s`; el.style.fontSize = `2.5rem`; document.body.appendChild(el);
     }
 
-    startScreen.addEventListener('click', startApp);
-    startScreen.addEventListener('touchstart', (e) => { e.preventDefault(); startApp(); });
+    function openModal(modal) { modal.style.display = 'flex'; setTimeout(() => modal.classList.add('show'), 10); }
+    function closeModal(modal) { modal.classList.remove('show'); setTimeout(() => modal.style.display = 'none', 300); }
+
+    settingsBtn.addEventListener('click', (e) => { e.stopPropagation(); isSettingsOpen = true; openModal(settingsModal); });
+    startScreen.addEventListener('mousedown', (e) => { if (!isSettingsOpen) startApp(); });
 
     function startApp() {
-      if (isStarted) return;
-      startScreen.style.display = 'none'; comboUi.style.display = 'block'; escGuide.style.display = 'block'; isStarted = true;
+      if (isStarted || isSettingsOpen) return;
+      startScreen.style.display = 'none'; settingsBtn.style.display = 'none'; comboUi.style.display = 'block'; escGuide.style.display = 'block';
+      watermark.style.opacity = '0'; isStarted = true; startTime = Date.now();
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     }
 
-    function updateCombo() {
-      comboUi.textContent = `팡팡: ${pressCount}`;
-      comboUi.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.1)', color: '#fff' }, { transform: 'scale(1)' }], { duration: 100 });
+    /* 전체화면이 예기치 않게 풀릴 때도 결과창 노출 */
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && isStarted) {
+        showResults();
+      }
+    });
+
+    function closeSettings() {
+      const checkboxes = document.querySelectorAll('.theme-item input');
+      let checkedCount = 0; checkboxes.forEach(cb => { if(cb.checked) checkedCount++; });
+      if (checkedCount === 0) { alert("테마를 골라주세요!"); checkboxes[0].checked = true; }
+      updateActiveEmojis();
+      const volRadios = document.querySelectorAll('input[name="vol"]');
+      volRadios.forEach(radio => { if(radio.checked) currentVolume = parseFloat(radio.value); });
+      isSettingsOpen = false; closeModal(settingsModal);
     }
 
-    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isStarted) showResults(); });
-    window.addEventListener('contextmenu', e => e.preventDefault());
-
-    const codeMap = {
-      'Digit1':'1','Digit2':'2','Digit3':'3','Digit4':'4','Digit5':'5','Digit6':'6','Digit7':'7','Digit8':'8','Digit9':'9','Digit0':'0',
-      'Numpad1':'1','Numpad2':'2','Numpad3':'3','Numpad4':'4','Numpad5':'5','Numpad6':'6','Numpad7':'7','Numpad8':'8','Numpad9':'9','Numpad0':'0',
-      'KeyQ':'ㅂ','KeyW':'ㅈ','KeyE':'ㄷ','KeyR':'ㄱ','KeyT':'ㅅ','KeyY':'ㅛ','KeyU':'ㅕ','KeyI':'ㅑ','KeyO':'ㅐ','KeyP':'ㅔ',
-      'KeyA':'ㅁ','KeyS':'ㄴ','KeyD':'ㅇ','KeyF':'ㄹ','KeyG':'ㅎ','KeyH':'ㅗ','KeyJ':'ㅓ','KeyK':'ㅏ','KeyL':'ㅣ',
-      'KeyZ':'ㅋ','KeyX':'ㅌ','KeyC':'ㅊ','KeyV':'ㅍ','KeyB':'ㅠ','KeyN':'ㅜ','KeyM':'ㅡ'
-    };
-
-    const randomEmojis = [
-      '🐶','🐱','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐣','🐔','🐧','🐦','🐤','🦆','🦅',
-      '🍎','🍓','🍒','🍉','🍇','🍌','🍍','🥝','🍅','🌽','🥕','🍕','🍔','🍟','🍦','🍩','🍰','🍭','🍱','🍙',
-      '🚗','🚕','🚙','🚌','🚒','🚓','🚑','🚜','🚲','🚀','⛵','✈️','🚁','🚂','🛶',
-      '⌚','💻','📱','☕','🎸','🎨','⚽','🏀','💎','💡','📖','✏️','🔍','🎒','🎁','🎈','🧸','🥁','🎷','🎺','🎻','🎮','🏠','🏰','🎡',
-      '🌈','🌻','☀️','❄️','💧','🍀','🌵','🍁','🍄','🌎','🌙','⭐','☁️','⛈️','🌩️','🌋','🌊','☄️','🔭','🛸','🎍','🎋','🍃','🌴','🐚','🐠','🐙','🐳','🐉','🐾'
-    ];
-    const fireworkEmojis = ['✨','💥','🎇','🎉','🌟','🎊','🎈'];
-    const colors = ['#FF5252','#FF4081','#E040FB','#7C4DFF','#536DFE','#448AFF','#18FFFF','#69F0AE','#EEFF41','#FFD740','#FFAB40'];
+    function updateActiveEmojis() { activeEmojis = []; const checkboxes = document.querySelectorAll('.theme-item input'); checkboxes.forEach(cb => { if (cb.checked) activeEmojis = activeEmojis.concat(emojiDB[cb.value]); }); }
 
     window.addEventListener('keydown', (e) => {
-      // 1. 시작 전 아무 키나 누르면 게임 시작
-      if (!isStarted) {
-        if (e.key !== 'F5' && e.key !== 'F12') startApp();
+      if (isSettingsOpen) return;
+
+      // 결과창에서 ESC 제외 다른 키를 누르면 재시작
+      if (!isStarted && resultScreen.style.display === 'flex') {
+        if (e.code !== 'Escape' && e.key !== 'Escape') {
+          e.preventDefault();
+          location.reload(); 
+        }
         return;
       }
-      // 2. ESC 종료
-      if (e.code === 'Escape' || e.key === 'Escape') { showResults(); return; }
-      
-      e.preventDefault(); e.stopPropagation();
-      pressCount++; updateCombo();
-      createVisuals(codeMap[e.code] || randomEmojis[Math.floor(Math.random() * randomEmojis.length)]); playTone();
+
+      // 게임 중 ESC: 전체화면 여부와 관계없이 즉시 결과창 호출
+      if (isStarted && (e.code === 'Escape' || e.key === 'Escape')) {
+        e.preventDefault();
+        showResults();
+        return;
+      }
+
+      // 게임 중 모든 키 차단 및 이펙트 발생
+      if (isStarted) {
+        e.preventDefault();
+        e.stopPropagation();
+        pressCount++; updateCombo();
+        const charToShow = codeMap[e.code] || activeEmojis[Math.floor(Math.random() * activeEmojis.length)];
+        createVisuals(charToShow); playTone();
+      } else if (!isStarted && startScreen.style.display !== 'none') {
+        if (e.key !== 'F5' && e.key !== 'F12') startApp();
+      }
     });
 
     const handleAction = (e) => {
-      if (!isStarted) return;
-      pressCount++; updateCombo();
+      if (!isStarted || isSettingsOpen) return;
+      e.preventDefault(); pressCount++; updateCombo();
       const x = e.clientX || (e.touches && e.touches[0].clientX), y = e.clientY || (e.touches && e.touches[0].clientY);
-      
-      if (isMobile) {
+      if (isMobile || e.touches) {
         const emojiCount = Math.floor(Math.random() * 3) + 2; 
-        for(let i=0; i < emojiCount; i++) {
-          setTimeout(() => createVisuals(randomEmojis[Math.floor(Math.random() * randomEmojis.length)]), i * 50);
-        }
+        for(let i=0; i < emojiCount; i++) { setTimeout(() => createVisuals(activeEmojis[Math.floor(Math.random() * activeEmojis.length)]), i * 50); }
         createFirework(x, y, 8); 
-      } else {
-        createFirework(x, y, 12);
-      }
+      } else { createFirework(x, y, 12); }
       playTone();
     };
 
     window.addEventListener('mousedown', handleAction);
-    window.addEventListener('touchstart', (e) => { e.preventDefault(); handleAction(e); });
+    window.addEventListener('touchstart', (e) => { if(!isSettingsOpen) { e.preventDefault(); handleAction(e); } });
+    window.addEventListener('contextmenu', (e) => { if(isStarted && !isSettingsOpen) e.preventDefault(); });
 
-    let lastTrailTime = 0;
-    window.addEventListener('mousemove', (e) => {
-      if (!isStarted || isMobile) return;
-      if (Date.now() - lastTrailTime > 80) { 
-        createTrail(e.clientX, e.clientY); 
-        lastTrailTime = Date.now(); 
-      }
-    });
+    function updateCombo() { comboUi.textContent = `팡팡: ${pressCount}`; comboUi.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.2)', color: '#fff' }, { transform: 'scale(1)' }], { duration: 100 }); }
+
+    function calculateTitle(count) {
+      if (count <= 20) return "🐣 조심조심 탐험가"; if (count <= 50) return "🐾 호기심 꼬마 타자수"; if (count <= 150) return "🚀 뽀시래기 리듬술사"; if (count <= 300) return "💥 무자비한 키보드 팡팡단"; if (count <= 500) return "🌪️ 혼돈의 마에스트로"; if (count <= 1000) return "🌌 우주 최강 빛의 손가락"; if (count <= 5000) return "🦖 키보드 쿵쿵 티라노"; if (count <= 10000) return "🌋 불꽃 타건 전설의 아기"; return "👑 신의 경지, 전능한 엔터키";
+    }
 
     function showResults() {
-      if (!isStarted) return;
-      isStarted = false; comboUi.style.display = 'none'; escGuide.style.display = 'none';
-      finalCountEl.textContent = pressCount; resultScreen.style.display = 'flex';
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    }
-
-    function shareSite() {
-      const url = window.location.href;
-      if (navigator.share) navigator.share({ title: '아기 키보드 놀이', url: url });
-      else { navigator.clipboard.writeText(url); alert("사이트 주소가 복사되었습니다!"); }
-    }
-
-    function createVisuals(char, customX, customY) {
-      const el = document.createElement('div'); el.textContent = char; el.className = 'letter';
-      el.style.color = colors[Math.floor(Math.random() * colors.length)];
-      el.style.fontSize = `${8 + Math.random() * 10}vw`;
-      el.style.left = customX ? `${customX}px` : `${15 + Math.random() * 70}%`;
-      el.style.top = customY ? `${customY}px` : `${15 + Math.random() * 70}%`;
-      el.style.transform = `translate(-50%, -50%) rotate(${(Math.random() * 60) - 30}deg)`;
-      document.body.appendChild(el); setTimeout(() => el.remove(), 1500);
-    }
-
-    function createFirework(x, y, count) {
-      for (let i = 0; i < count; i++) {
-        const el = document.createElement('div'); el.textContent = fireworkEmojis[Math.floor(Math.random() * fireworkEmojis.length)];
-        el.style.position = 'absolute'; el.style.left = `${x}px`; el.style.top = `${y}px`;
-        el.style.fontSize = isMobile ? '5vw' : '3vw'; 
-        el.style.pointerEvents = 'none';
-        // 문법 오류가 발생했던 부분을 정상적인 단위 결합 로직으로 변경 완료
-        const angle = Math.random() * Math.PI * 2;
-        const dist = (isMobile ? 12 : 8) + Math.random() * 8; 
-        el.animate([
-          { transform: `translate(-50%, -50%) scale(0.5)`, opacity: 0.8 },
-          { transform: `translate(calc(-50% + ${Math.cos(angle)*dist}vw), calc(-50% + ${Math.sin(angle)*dist}vw)) scale(1.5)`, opacity: 0 }
-        ], { duration: 600, fill: 'forwards' });
-        document.body.appendChild(el); setTimeout(() => el.remove(), 700);
+      if (!isStarted) return; 
+      isStarted = false; 
+      comboUi.style.display = 'none'; 
+      escGuide.style.display = 'none'; 
+      watermark.style.opacity = '1';
+      
+      // 혹시 전체화면 상태라면 해제
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
       }
+
+      const playSec = Math.floor((Date.now() - startTime) / 1000), m = Math.floor(playSec / 60), s = playSec % 60;
+      document.getElementById('report-time').textContent = m > 0 ? `${m}분 ${s}초` : `${s}초`;
+      document.getElementById('report-count').textContent = `${pressCount}번`;
+      document.getElementById('report-title').textContent = calculateTitle(pressCount);
+      openModal(resultScreen);
     }
 
-    function createTrail(x, y) {
-      const el = document.createElement('div'); el.textContent = '⭐';
-      el.style.position = 'absolute'; el.style.left = `${x}px`; el.style.top = `${y}px`;
-      el.style.fontSize = '2.5vw'; 
-      el.style.opacity = '0.4';
-      el.style.pointerEvents = 'none';
-      el.animate([{ opacity: 0.4 }, { transform: `translateY(1.5vw)`, opacity: 0 }], { duration: 300 });
-      document.body.appendChild(el); setTimeout(() => el.remove(), 300);
+    function shareSite() { const url = window.location.href; const shareText = `아기 놀이 결과!\n⏱️시간: ${document.getElementById('report-time').textContent}\n🖐️타수: ${pressCount}번\n👑칭호: ${calculateTitle(pressCount)}`; if (navigator.share) { navigator.share({ title: '아기 놀이', text: shareText, url: url }); } else { navigator.clipboard.writeText(shareText + "\n" + url); alert("기록이 복사되었습니다!"); } }
+    
+    function createVisuals(char, customX, customY) { 
+      const el = document.createElement('div'); 
+      el.textContent = char; 
+      el.className = 'letter'; 
+      el.style.color = colors[Math.floor(Math.random() * colors.length)];
+      el.style.fontSize = `clamp(3rem, 15vw, 8rem)`; 
+      el.style.left = customX ? `${customX}px` : `${5 + Math.random() * 90}%`; 
+      el.style.top = customY ? `${customY}px` : `${10 + Math.random() * 80}%`; 
+      el.style.transform = `translate(-50%, -50%) rotate(${(Math.random() * 60) - 30}deg)`; 
+      document.body.appendChild(el); 
+      setTimeout(() => el.remove(), 1500); 
     }
-
-    function playTone() {
-      if (!audioCtx) return;
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      osc.type = 'sine'; osc.frequency.setValueAtTime(isMobile ? 400 + Math.random() * 400 : 350 + Math.random() * 500, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-    }
+    
+    function createFirework(x, y, count) { for (let i = 0; i < count; i++) { const el = document.createElement('div'); el.textContent = ['✨','💥','🎇','🎉','🌟','🎊','🎈'][Math.floor(Math.random() * 7)]; el.style.position = 'absolute'; el.style.left = `${x}px`; el.style.top = `${y}px`; el.style.fontSize = `clamp(1.5rem, 6vw, 3rem)`; el.style.pointerEvents = 'none'; const angle = Math.random() * Math.PI * 2, dist = (isMobile ? 100 : 150) + Math.random() * 50; el.animate([ { transform: `translate(-50%, -50%) scale(0.5)`, opacity: 0.8 }, { transform: `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px)) scale(1.5)`, opacity: 0 } ], { duration: 600, fill: 'forwards' }); document.body.appendChild(el); setTimeout(() => el.remove(), 700); } }
+    function playTone() { if (!audioCtx || currentVolume === 0) return; if (audioCtx.state === 'suspended') audioCtx.resume(); const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(isMobile ? 400 + Math.random() * 400 : 350 + Math.random() * 500, audioCtx.currentTime); gain.gain.setValueAtTime(currentVolume, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
   </script>
 </body>
 </html>
