@@ -7,29 +7,28 @@
   <style>
     body { margin: 0; overflow: hidden; background-color: #2b2b2b; font-family: 'Malgun Gothic', sans-serif; user-select: none; touch-action: none; }
     
-    /* 상단 ESC 안내 메시지 */
-    #esc-guide {
-      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.3); font-size: 0.8rem; z-index: 60;
-      pointer-events: none; display: none;
-    }
-
-    #combo-ui { position: absolute; top: 20px; right: 20px; color: #ffb74d; font-size: 1.5rem; font-weight: bold; z-index: 50; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); pointer-events: none; display: none; }
+    #esc-guide { position: absolute; top: 2vw; left: 50%; transform: translateX(-50%); color: rgba(255, 255, 255, 0.2); font-size: 1.5vw; z-index: 60; pointer-events: none; display: none; }
+    #combo-ui { position: absolute; top: 3vw; right: 3vw; color: #ffb74d; font-size: 3vw; font-weight: bold; z-index: 50; text-shadow: 0.2vw 0.2vw 0.4vw rgba(0,0,0,0.5); pointer-events: none; display: none; }
+    
     #start-screen, #result-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; cursor: pointer; text-align: center; }
-    #start-screen { background-color: #2b2b2b; color: #ffb74d; font-size: 2.5rem; font-weight: bold; border: 8px solid #333; box-sizing: border-box; }
+    #start-screen { background-color: #2b2b2b; color: #ffb74d; font-size: 5vw; font-weight: bold; border: 1vw solid #333; box-sizing: border-box; }
     #result-screen { background-color: rgba(0, 0, 0, 0.95); color: white; display: none; }
-    .result-box { background: #444; padding: 2rem; border-radius: 20px; border: 4px solid #ffb74d; }
-    .result-title { font-size: 2rem; margin-bottom: 1rem; color: #ffb74d; }
-    .count-text { font-size: 3rem; margin-bottom: 2rem; }
-    .btn-group { display: flex; gap: 1rem; justify-content: center; }
-    button { padding: 1rem 2rem; font-size: 1.2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
+    
+    .result-box { background: #444; padding: 4vw; border-radius: 3vw; border: 0.5vw solid #ffb74d; }
+    .result-title { font-size: 4vw; margin-bottom: 2vw; color: #ffb74d; }
+    .count-text { font-size: 6vw; margin-bottom: 4vw; }
+    
+    .btn-group { display: flex; gap: 2vw; justify-content: center; }
+    button { padding: 1.5vw 3vw; font-size: 2vw; border-radius: 1.5vw; border: none; cursor: pointer; font-weight: bold; }
     .btn-share { background-color: #448AFF; color: white; }
     .btn-restart { background-color: #69F0AE; color: #333; }
     
-    #creator-watermark { position: absolute; bottom: 10px; right: 15px; font-size: 0.75rem; color: rgba(255, 255, 255, 0.2); pointer-events: auto; letter-spacing: 0.5px; }
+    #creator-watermark { position: absolute; bottom: 1.5vw; right: 2vw; font-size: 1.2vw; color: rgba(255, 255, 255, 0.15); pointer-events: auto; letter-spacing: 0.05vw; }
+    
     .letter { position: absolute; font-weight: 900; pointer-events: none; animation: popOut 1.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards; }
     @keyframes popOut { 0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
-    .bg-element { position: absolute; opacity: 0.1; pointer-events: none; z-index: -1; animation: float linear infinite; }
+    
+    .bg-element { position: absolute; opacity: 0.08; pointer-events: none; z-index: -1; animation: float linear infinite; }
     @keyframes float { 0% { transform: translateY(110vh) rotate(0deg); } 100% { transform: translateY(-10vh) rotate(360deg); } }
   </style>
 </head>
@@ -57,13 +56,14 @@
     let audioCtx, isStarted = false, pressCount = 0;
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+    // 배경 애니메이션 설정
     const bgEmojis = ['⭐', '🪐', '🌙', '☄️', '🚀', '✨', '🌍', '🛸'];
     for (let i = 0; i < 40; i++) {
       const el = document.createElement('div');
       el.textContent = bgEmojis[Math.floor(Math.random() * bgEmojis.length)];
       el.className = 'bg-element'; el.style.left = `${Math.random() * 100}vw`;
       el.style.animationDuration = `${15 + Math.random() * 23}s`; el.style.animationDelay = `-${Math.random() * 30}s`;
-      el.style.fontSize = `${1 + Math.random() * 3}rem`; document.body.appendChild(el);
+      el.style.fontSize = `${2 + Math.random() * 3}vw`; document.body.appendChild(el);
     }
 
     startScreen.addEventListener('click', startApp);
@@ -78,7 +78,7 @@
 
     function updateCombo() {
       comboUi.textContent = `팡팡: ${pressCount}`;
-      comboUi.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.2)', color: '#fff' }, { transform: 'scale(1)' }], { duration: 100 });
+      comboUi.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.1)', color: '#fff' }, { transform: 'scale(1)' }], { duration: 100 });
     }
 
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isStarted) showResults(); });
@@ -91,23 +91,22 @@
       'KeyA':'ㅁ','KeyS':'ㄴ','KeyD':'ㅇ','KeyF':'ㄹ','KeyG':'ㅎ','KeyH':'ㅗ','KeyJ':'ㅓ','KeyK':'ㅏ','KeyL':'ㅣ',
       'KeyZ':'ㅋ','KeyX':'ㅌ','KeyC':'ㅊ','KeyV':'ㅍ','KeyB':'ㅠ','KeyN':'ㅜ','KeyM':'ㅡ'
     };
-    const randomEmojis = ['🐶','🐱','🐰','🦁','🐷','🐸','🍎','🍓','🍇','🚗','🚌','🚀','🐳','🍦','🧸','🌈','🌻','🍕','🎨','⚽','🍩','🍬','🎈','🐣','🦄'];
+
+    // 이모티콘 110종 대확장 배열
+    const randomEmojis = [
+      '🐶','🐱','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐣','🐔','🐧','🐦','🐤','🦆','🦅',
+      '🍎','🍓','🍒','🍉','🍇','🍌',' Pineapple','🥝','🍅','🌽','🥕','🍕','🍔','🍟','🍦','🍩','🍰','🍭','🍱','🍙',
+      '🚗','🚕','🚙','🚌','🚒','🚓','🚑','🚜','🚲','🚀','⛵','✈️','🚁','🚂','🛶',
+      '⌚','💻','📱','☕','🎸','🎨','⚽','🏀','💎','💡','📖','✏️','🔍','🎒','🎁','🎈','🧸','🥁','🎷','🎺','🎻','🎮','🏠','🏰','🎡',
+      '🌈','🌻','☀️','❄️','💧','🍀','🌵','🍁','🍄','🌎','🌙','⭐','☁️','⛈️','🌩️','🌋','🌊','☄️','🔭','🛸','🎍','🎋','🍃','🌴','🐚','🐠','🐙','🐳','🐉','🐾'
+    ];
     const fireworkEmojis = ['✨','💥','🎇','🎉','🌟','🎊','🎈'];
     const colors = ['#FF5252','#FF4081','#E040FB','#7C4DFF','#536DFE','#448AFF','#18FFFF','#69F0AE','#EEFF41','#FFD740','#FFAB40'];
 
     window.addEventListener('keydown', (e) => {
-      // 1. ESC 키는 허용 (결과창 호출)
-      if (e.code === 'Escape' || e.key === 'Escape') {
-        if (isStarted) showResults();
-        return;
-      }
-      
-      // 2. 그 외 모든 키는 차단 (새로고침 F5 등 포함)
+      if (e.code === 'Escape' || e.key === 'Escape') { if (isStarted) showResults(); return; }
       if (!isStarted) return;
-      e.preventDefault(); 
-      e.stopPropagation();
-
-      // 3. 차단된 키라도 아이 놀이를 위해 이펙트는 발생시킴
+      e.preventDefault(); e.stopPropagation();
       pressCount++; updateCombo();
       createVisuals(codeMap[e.code] || randomEmojis[Math.floor(Math.random() * randomEmojis.length)]); playTone();
     });
@@ -116,10 +115,16 @@
       if (!isStarted) return;
       pressCount++; updateCombo();
       const x = e.clientX || (e.touches && e.touches[0].clientX), y = e.clientY || (e.touches && e.touches[0].clientY);
+      
       if (isMobile) {
-        for(let i=0; i<3; i++) setTimeout(() => createVisuals(randomEmojis[Math.floor(Math.random() * randomEmojis.length)], x, y), i * 50);
-        createFirework(x, y, 20);
-      } else createFirework(x, y, 12);
+        const emojiCount = Math.floor(Math.random() * 3) + 2; 
+        for(let i=0; i < emojiCount; i++) {
+          setTimeout(() => createVisuals(randomEmojis[Math.floor(Math.random() * randomEmojis.length)]), i * 50);
+        }
+        createFirework(x, y, 8); 
+      } else {
+        createFirework(x, y, 12);
+      }
       playTone();
     };
 
@@ -129,7 +134,11 @@
     let lastTrailTime = 0;
     window.addEventListener('mousemove', (e) => {
       if (!isStarted || isMobile) return;
-      if (Date.now() - lastTrailTime > 30) { createTrail(e.clientX, e.clientY); lastTrailTime = Date.now(); }
+      // 어지러움 방지: 간격을 80ms로 늘려 듬성듬성 나오게 함
+      if (Date.now() - lastTrailTime > 80) { 
+        createTrail(e.clientX, e.clientY); 
+        lastTrailTime = Date.now(); 
+      }
     });
 
     function showResults() {
@@ -148,9 +157,9 @@
     function createVisuals(char, customX, customY) {
       const el = document.createElement('div'); el.textContent = char; el.className = 'letter';
       el.style.color = colors[Math.floor(Math.random() * colors.length)];
-      el.style.fontSize = `${6 + Math.random() * 12}vw`;
-      el.style.left = customX ? `${customX}px` : `${10 + Math.random() * 80}%`;
-      el.style.top = customY ? `${customY}px` : `${10 + Math.random() * 80}%`;
+      el.style.fontSize = `${8 + Math.random() * 10}vw`;
+      el.style.left = customX ? `${customX}px` : `${15 + Math.random() * 70}%`;
+      el.style.top = customY ? `${customY}px` : `${15 + Math.random() * 70}%`;
       el.style.transform = `translate(-50%, -50%) rotate(${(Math.random() * 60) - 30}deg)`;
       document.body.appendChild(el); setTimeout(() => el.remove(), 1500);
     }
@@ -159,32 +168,37 @@
       for (let i = 0; i < count; i++) {
         const el = document.createElement('div'); el.textContent = fireworkEmojis[Math.floor(Math.random() * fireworkEmojis.length)];
         el.style.position = 'absolute'; el.style.left = `${x}px`; el.style.top = `${y}px`;
-        el.style.fontSize = isMobile ? '8vw' : '4vw'; el.style.pointerEvents = 'none';
-        const angle = Math.random() * Math.PI * 2, dist = (isMobile ? 150 : 100) + Math.random() * 100;
+        el.style.fontSize = isMobile ? '5vw' : '3vw'; 
+        el.style.pointerEvents = 'none';
+        const angle = Math.random() * Math.PI * 2, dist = (isMobile ? 8vw : 5vw).replace('vw','') * (10 + Math.random() * 10);
         el.animate([
-          { transform: `translate(-50%, -50%) scale(0.5)`, opacity: 1 },
-          { transform: `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px)) scale(1.8)`, opacity: 0 }
-        ], { duration: 800, fill: 'forwards' });
-        document.body.appendChild(el); setTimeout(() => el.remove(), 1000);
+          { transform: `translate(-50%, -50%) scale(0.5)`, opacity: 0.8 },
+          { transform: `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px)) scale(1.5)`, opacity: 0 }
+        ], { duration: 600, fill: 'forwards' });
+        document.body.appendChild(el); setTimeout(() => el.remove(), 700);
       }
     }
 
     function createTrail(x, y) {
       const el = document.createElement('div'); el.textContent = '⭐';
       el.style.position = 'absolute'; el.style.left = `${x}px`; el.style.top = `${y}px`;
-      el.style.fontSize = '5vw'; el.style.pointerEvents = 'none';
-      el.animate([{ opacity: 0.8 }, { transform: `translateY(20px)`, opacity: 0 }], { duration: 400 });
-      document.body.appendChild(el); setTimeout(() => el.remove(), 400);
+      // 어지러움 방지: 크기 축소 (5vw -> 2vw) 및 반투명
+      el.style.fontSize = '2.5vw'; 
+      el.style.opacity = '0.4';
+      el.style.pointerEvents = 'none';
+      // 더 빨리 사라지게 애니메이션 시간 단축
+      el.animate([{ opacity: 0.4 }, { transform: `translateY(1.5vw)`, opacity: 0 }], { duration: 300 });
+      document.body.appendChild(el); setTimeout(() => el.remove(), 300);
     }
 
     function playTone() {
       if (!audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      osc.type = 'sine'; osc.frequency.setValueAtTime(isMobile ? 400 + Math.random() * 400 : 300 + Math.random() * 600, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(isMobile ? 400 + Math.random() * 400 : 350 + Math.random() * 500, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
       osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     }
   </script>
 </body>
