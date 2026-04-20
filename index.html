@@ -17,11 +17,8 @@
 
     #combo-ui { position: absolute; top: 20px; left: 20px; color: #ffb74d; font-size: clamp(1.5rem, 4vw, 3rem); z-index: 50; pointer-events: none; display: none; }
     #esc-guide { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: rgba(255, 255, 255, 0.15); font-size: 1rem; z-index: 60; pointer-events: none; display: none; }
-    
-    /* 하단 워터마크 수정 */
     #creator-watermark { position: fixed; bottom: 10px; right: 15px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.3); z-index: 3000; pointer-events: none; opacity: 1; transition: opacity 0.5s; }
 
-    /* 모달 레이아웃 고정 (fixed 사용으로 화면 전체 덮음) */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; flex-direction: column; opacity: 0; transition: opacity 0.3s; }
     .modal-overlay.show { opacity: 1; }
     
@@ -133,7 +130,7 @@
 
     const emojiDB = { animal: ['🐶','🐱','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐣','🐔','🐧','🐦','🐤','🦆','🦅'], food: ['🍎','🍓','🍒','🍉','🍇','🍌','🍍','🥝','🍅','🌽','🥕','🍕','🍔','🍟','🍦','🍩','🍰','🍭','🍱','🍙'], vehicle: ['🚗','🚕','🚙','🚌','🚒','🚓','🚑','🚜','🚲','🚀','⛵','✈️','🛸','🚂','🛶'], object: ['⌚','💻','📱','☕','🎸','🎨','⚽','🏀','💎','💡','📖','✏️','🔍','🎒','🎁','🎈','🧸','🥁','🎷','🎺','🎻','🎮','🏠','🏰','🎡'], nature: ['🌈','🌻','☀️','❄️','💧','🍀','🌵','🍁','🍄','🌎','🌙','⭐','☁️','⛈️','🌩️','🌋','🌊','☄️','🔭','🛸','🎍','🎋','🍃','🌴','🐚','🐠','🐙','🐳','🐉','🐾'] };
     const colors = ['#FF5252','#FF4081','#E040FB','#7C4DFF','#536DFE','#448AFF','#18FFFF','#69F0AE','#EEFF41','#FFD740','#FFAB40'];
-    let activeEmojis = []; updateActiveEmojis();
+    let activeEmojis = []; 
 
     const codeMap = { 
       'Digit1':'1','Digit2':'2','Digit3':'3','Digit4':'4','Digit5':'5','Digit6':'6','Digit7':'7','Digit8':'8','Digit9':'9','Digit0':'0', 
@@ -142,6 +139,8 @@
       'KeyA':'ㅁ','KeyS':'ㄴ','KeyD':'ㅇ','KeyF':'ㄹ','KeyG':'ㅎ','KeyH':'ㅗ','KeyJ':'ㅓ','KeyK':'ㅏ','KeyL':'ㅣ', 
       'KeyZ':'ㅋ','KeyX':'ㅌ','KeyC':'ㅊ','KeyV':'ㅍ','KeyB':'ㅠ','KeyN':'ㅜ','KeyM':'ㅡ' 
     };
+
+    updateActiveEmojis();
 
     for (let i = 0; i < 40; i++) {
       const el = document.createElement('div'); el.textContent = ['⭐','🪐','🌙','☄️','🚀','✨','🌍','🛸'][Math.floor(Math.random() * 8)]; el.className = 'bg-element'; el.style.left = `${Math.random() * 100}vw`; el.style.animationDuration = `${15 + Math.random() * 23}s`; el.style.animationDelay = `-${Math.random() * 30}s`; el.style.fontSize = `2.5rem`; document.body.appendChild(el);
@@ -161,12 +160,7 @@
       if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
     }
 
-    /* 전체화면이 예기치 않게 풀릴 때도 결과창 노출 */
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement && isStarted) {
-        showResults();
-      }
-    });
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isStarted) showResults(); });
 
     function closeSettings() {
       const checkboxes = document.querySelectorAll('.theme-item input');
@@ -182,27 +176,13 @@
 
     window.addEventListener('keydown', (e) => {
       if (isSettingsOpen) return;
-
-      // 결과창에서 ESC 제외 다른 키를 누르면 재시작
       if (!isStarted && resultScreen.style.display === 'flex') {
-        if (e.code !== 'Escape' && e.key !== 'Escape') {
-          e.preventDefault();
-          location.reload(); 
-        }
+        if (e.code !== 'Escape' && e.key !== 'Escape') { e.preventDefault(); location.reload(); }
         return;
       }
-
-      // 게임 중 ESC: 전체화면 여부와 관계없이 즉시 결과창 호출
-      if (isStarted && (e.code === 'Escape' || e.key === 'Escape')) {
-        e.preventDefault();
-        showResults();
-        return;
-      }
-
-      // 게임 중 모든 키 차단 및 이펙트 발생
+      if (isStarted && (e.code === 'Escape' || e.key === 'Escape')) { e.preventDefault(); showResults(); return; }
       if (isStarted) {
-        e.preventDefault();
-        e.stopPropagation();
+        e.preventDefault(); e.stopPropagation();
         pressCount++; updateCombo();
         const charToShow = codeMap[e.code] || activeEmojis[Math.floor(Math.random() * activeEmojis.length)];
         createVisuals(charToShow); playTone();
@@ -215,11 +195,21 @@
       if (!isStarted || isSettingsOpen) return;
       e.preventDefault(); pressCount++; updateCombo();
       const x = e.clientX || (e.touches && e.touches[0].clientX), y = e.clientY || (e.touches && e.touches[0].clientY);
+      
       if (isMobile || e.touches) {
-        const emojiCount = Math.floor(Math.random() * 3) + 2; 
-        for(let i=0; i < emojiCount; i++) { setTimeout(() => createVisuals(activeEmojis[Math.floor(Math.random() * activeEmojis.length)]), i * 50); }
+        // [수정] 모바일 터치 시 1~3개 랜덤 생성
+        const emojiCount = Math.floor(Math.random() * 3) + 1; 
+        // [수정] 이모티콘 + 한글 + 숫자 통합 풀 생성
+        const fullPool = [...activeEmojis, ...Object.values(codeMap)];
+        
+        for(let i=0; i < emojiCount; i++) { 
+          const randomChar = fullPool[Math.floor(Math.random() * fullPool.length)];
+          setTimeout(() => createVisuals(randomChar), i * 50); 
+        }
         createFirework(x, y, 8); 
-      } else { createFirework(x, y, 12); }
+      } else { 
+        createFirework(x, y, 12); 
+      }
       playTone();
     };
 
@@ -234,17 +224,8 @@
     }
 
     function showResults() {
-      if (!isStarted) return; 
-      isStarted = false; 
-      comboUi.style.display = 'none'; 
-      escGuide.style.display = 'none'; 
-      watermark.style.opacity = '1';
-      
-      // 혹시 전체화면 상태라면 해제
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-
+      if (!isStarted) return; isStarted = false; comboUi.style.display = 'none'; escGuide.style.display = 'none'; watermark.style.opacity = '1';
+      if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); }
       const playSec = Math.floor((Date.now() - startTime) / 1000), m = Math.floor(playSec / 60), s = playSec % 60;
       document.getElementById('report-time').textContent = m > 0 ? `${m}분 ${s}초` : `${s}초`;
       document.getElementById('report-count').textContent = `${pressCount}번`;
