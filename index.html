@@ -5,35 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>아기 한글 & 숫자 놀이</title>
   <style>
-    body { margin: 0; overflow: hidden; background-color: #2b2b2b; font-family: 'Malgun Gothic', sans-serif; user-select: none; }
-    
+    body { margin: 0; overflow: hidden; background-color: #2b2b2b; font-family: 'Malgun Gothic', sans-serif; user-select: none; touch-action: none; }
+    #combo-ui { position: absolute; top: 20px; right: 20px; color: #ffb74d; font-size: 1.5rem; font-weight: bold; z-index: 50; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); pointer-events: none; display: none; }
     #start-screen, #result-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; cursor: pointer; text-align: center; }
-    #start-screen { background-color: #ffb74d; color: #333; font-size: 2.5rem; font-weight: bold; }
-    #result-screen { background-color: rgba(0, 0, 0, 0.9); color: white; display: none; }
-    
+    #start-screen { background-color: #2b2b2b; color: #ffb74d; font-size: 2.5rem; font-weight: bold; border: 8px solid #333; box-sizing: border-box; }
+    #result-screen { background-color: rgba(0, 0, 0, 0.95); color: white; display: none; }
     .result-box { background: #444; padding: 2rem; border-radius: 20px; border: 4px solid #ffb74d; }
     .result-title { font-size: 2rem; margin-bottom: 1rem; color: #ffb74d; }
     .count-text { font-size: 3rem; margin-bottom: 2rem; }
-    
     .btn-group { display: flex; gap: 1rem; justify-content: center; }
     button { padding: 1rem 2rem; font-size: 1.2rem; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
     .btn-share { background-color: #448AFF; color: white; }
     .btn-restart { background-color: #69F0AE; color: #333; }
-
-    .letter { position: absolute; font-weight: 900; pointer-events: none; animation: popOut 1.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards; }
-    @keyframes popOut {
-      0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; }
-      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-      100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+    
+    /* 매우 은은한 워터마크 형태의 개발자 정보 */
+    #creator-watermark {
+      position: absolute; bottom: 10px; right: 15px;
+      font-size: 0.75rem; color: rgba(255, 255, 255, 0.2); /* 투명도 20%로 낮춤 */
+      pointer-events: auto; letter-spacing: 0.5px;
     }
 
+    .letter { position: absolute; font-weight: 900; pointer-events: none; animation: popOut 1.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards; }
+    @keyframes popOut { 0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
     .bg-element { position: absolute; opacity: 0.1; pointer-events: none; z-index: -1; animation: float linear infinite; }
     @keyframes float { 0% { transform: translateY(110vh) rotate(0deg); } 100% { transform: translateY(-10vh) rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <div id="start-screen">화면을 터치하여 시작!<br><span style="font-size: 1rem; margin-top: 10px;">(종료하려면 ESC를 누르세요)</span></div>
+  <div id="combo-ui">팡팡: 0</div>
+  <div id="start-screen">화면을 터치하여 시작!<br><span style="font-size: 1.2rem; color: #888; margin-top: 20px;">(종료하려면 ESC를 누르세요)</span></div>
 
   <div id="result-screen">
     <div class="result-box">
@@ -44,172 +45,130 @@
         <button class="btn-restart" onclick="location.reload()">다시 놀기</button>
       </div>
     </div>
+    <div id="creator-watermark">개발:bunnyboxcommerce@gmail.com</div>
   </div>
 
   <script>
-    const startScreen = document.getElementById('start-screen');
-    const resultScreen = document.getElementById('result-screen');
-    const finalCountEl = document.getElementById('final-count');
-    let audioCtx;
-    let isStarted = false;
-    let pressCount = 0;
+    const startScreen = document.getElementById('start-screen'), resultScreen = document.getElementById('result-screen');
+    const finalCountEl = document.getElementById('final-count'), comboUi = document.getElementById('combo-ui');
+    let audioCtx, isStarted = false, pressCount = 0;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    const bgEmojis = ['⭐', '🪐', '🌙', '☄️', '🚀', '✨'];
-    for (let i = 0; i < 20; i++) {
+    const bgEmojis = ['⭐', '🪐', '🌙', '☄️', '🚀', '✨', '🌍', '🛸'];
+    for (let i = 0; i < 40; i++) {
       const el = document.createElement('div');
       el.textContent = bgEmojis[Math.floor(Math.random() * bgEmojis.length)];
-      el.className = 'bg-element';
-      el.style.left = `${Math.random() * 100}vw`;
-      el.style.animationDuration = `${20 + Math.random() * 30}s`;
-      el.style.fontSize = `${1 + Math.random() * 3}rem`;
-      document.body.appendChild(el);
+      el.className = 'bg-element'; el.style.left = `${Math.random() * 100}vw`;
+      el.style.animationDuration = `${15 + Math.random() * 23}s`; el.style.animationDelay = `-${Math.random() * 30}s`;
+      el.style.fontSize = `${1 + Math.random() * 3}rem`; document.body.appendChild(el);
     }
 
-    startScreen.addEventListener('click', () => {
-      startScreen.style.display = 'none';
-      isStarted = true;
+    startScreen.addEventListener('click', startApp);
+    startScreen.addEventListener('touchstart', (e) => { e.preventDefault(); startApp(); });
+
+    function startApp() {
+      if (isStarted) return;
+      startScreen.style.display = 'none'; comboUi.style.display = 'block'; isStarted = true;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-    });
+      if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    }
 
-    // 브라우저 전체화면 종료(ESC 등) 감지 시 결과창 호출
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement && isStarted) {
-        showResults();
-      }
-    });
+    function updateCombo() {
+      comboUi.textContent = `팡팡: ${pressCount}`;
+      comboUi.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.2)', color: '#fff' }, { transform: 'scale(1)' }], { duration: 100 });
+    }
 
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && isStarted) showResults(); });
     window.addEventListener('contextmenu', e => e.preventDefault());
 
-    // 스페이스바('Space': '⭐') 삭제됨 -> 무작위 이모지로 넘어감
     const codeMap = {
-      'Digit1':'1', 'Digit2':'2', 'Digit3':'3', 'Digit4':'4', 'Digit5':'5', 'Digit6':'6', 'Digit7':'7', 'Digit8':'8', 'Digit9':'9', 'Digit0':'0',
-      'Numpad1':'1', 'Numpad2':'2', 'Numpad3':'3', 'Numpad4':'4', 'Numpad5':'5', 'Numpad6':'6', 'Numpad7':'7', 'Numpad8':'8', 'Numpad9':'9', 'Numpad0':'0',
-      'KeyQ':'ㅂ', 'KeyW':'ㅈ', 'KeyE':'ㄷ', 'KeyR':'ㄱ', 'KeyT':'ㅅ', 'KeyY':'ㅛ', 'KeyU':'ㅕ', 'KeyI':'ㅑ', 'KeyO':'ㅐ', 'KeyP':'ㅔ',
-      'KeyA':'ㅁ', 'KeyS':'ㄴ', 'KeyD':'ㅇ', 'KeyF':'ㄹ', 'KeyG':'ㅎ', 'KeyH':'ㅗ', 'KeyJ':'ㅓ', 'KeyK':'ㅏ', 'KeyL':'ㅣ',
-      'KeyZ':'ㅋ', 'KeyX':'ㅌ', 'KeyC':'ㅊ', 'KeyV':'ㅍ', 'KeyB':'ㅠ', 'KeyN':'ㅜ', 'KeyM':'ㅡ'
+      'Digit1':'1','Digit2':'2','Digit3':'3','Digit4':'4','Digit5':'5','Digit6':'6','Digit7':'7','Digit8':'8','Digit9':'9','Digit0':'0',
+      'Numpad1':'1','Numpad2':'2','Numpad3':'3','Numpad4':'4','Numpad5':'5','Numpad6':'6','Numpad7':'7','Numpad8':'8','Numpad9':'9','Numpad0':'0',
+      'KeyQ':'ㅂ','KeyW':'ㅈ','KeyE':'ㄷ','KeyR':'ㄱ','KeyT':'ㅅ','KeyY':'ㅛ','KeyU':'ㅕ','KeyI':'ㅑ','KeyO':'ㅐ','KeyP':'ㅔ',
+      'KeyA':'ㅁ','KeyS':'ㄴ','KeyD':'ㅇ','KeyF':'ㄹ','KeyG':'ㅎ','KeyH':'ㅗ','KeyJ':'ㅓ','KeyK':'ㅏ','KeyL':'ㅣ',
+      'KeyZ':'ㅋ','KeyX':'ㅌ','KeyC':'ㅊ','KeyV':'ㅍ','KeyB':'ㅠ','KeyN':'ㅜ','KeyM':'ㅡ'
     };
-
-    const randomEmojis = ['🐶', '🐱', '🐰', '🦁', '🐷', '🐸', '🍎', '🍓', '🍇', '🚗', '🚌', '🚀', '🐳', '🍦', '🧸', '🌈', '🌻', '🍕', '🎨', '⚽'];
-    const fireworkEmojis = ['✨', '💥', '🎇', '🎉', '🌟'];
-    const colors = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE', '#448AFF', '#18FFFF', '#69F0AE', '#EEFF41', '#FFD740', '#FFAB40'];
+    const randomEmojis = ['🐶','🐱','🐰','🦁','🐷','🐸','🍎','🍓','🍇','🚗','🚌','🚀','🐳','🍦','🧸','🌈','🌻','🍕','🎨','⚽','🍩','🍬','🎈','🐣','🦄'];
+    const fireworkEmojis = ['✨','💥','🎇','🎉','🌟','🎊','🎈'];
+    const colors = ['#FF5252','#FF4081','#E040FB','#7C4DFF','#536DFE','#448AFF','#18FFFF','#69F0AE','#EEFF41','#FFD740','#FFAB40'];
 
     window.addEventListener('keydown', (e) => {
-      // 1. ESC 키 입력 최우선 차단
-      if (e.code === 'Escape' || e.key === 'Escape') {
-        if (isStarted) showResults();
-        return;
-      }
+      if (e.code === 'Escape' || e.key === 'Escape') { if (isStarted) showResults(); return; }
       if (!isStarted || e.key === 'F5' || e.key === 'F12') return;
-      e.preventDefault();
-
-      pressCount++;
-      let char = codeMap[e.code] || randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
-      createVisuals(char);
-      playTone();
+      e.preventDefault(); pressCount++; updateCombo();
+      createVisuals(codeMap[e.code] || randomEmojis[Math.floor(Math.random() * randomEmojis.length)]); playTone();
     });
 
-    window.addEventListener('mousedown', (e) => {
+    const handleAction = (e) => {
       if (!isStarted) return;
-      pressCount++;
-      createFirework(e.clientX, e.clientY);
+      pressCount++; updateCombo();
+      const x = e.clientX || (e.touches && e.touches[0].clientX), y = e.clientY || (e.touches && e.touches[0].clientY);
+      if (isMobile) {
+        for(let i=0; i<3; i++) setTimeout(() => createVisuals(randomEmojis[Math.floor(Math.random() * randomEmojis.length)], x, y), i * 50);
+        createFirework(x, y, 20);
+      } else createFirework(x, y, 12);
       playTone();
-    });
+    };
+
+    window.addEventListener('mousedown', handleAction);
+    window.addEventListener('touchstart', (e) => { e.preventDefault(); handleAction(e); });
 
     let lastTrailTime = 0;
     window.addEventListener('mousemove', (e) => {
-      if (!isStarted) return;
-      const now = Date.now();
-      if (now - lastTrailTime > 30) {
-        createTrail(e.clientX, e.clientY);
-        lastTrailTime = now;
-      }
+      if (!isStarted || isMobile) return;
+      if (Date.now() - lastTrailTime > 30) { createTrail(e.clientX, e.clientY); lastTrailTime = Date.now(); }
     });
 
     function showResults() {
       if (!isStarted) return;
-      isStarted = false;
-      finalCountEl.textContent = pressCount;
-      resultScreen.style.display = 'flex';
-      // 전체화면 강제 해제 (결과창을 더 안정적으로 표시)
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
+      isStarted = false; comboUi.style.display = 'none'; finalCountEl.textContent = pressCount; resultScreen.style.display = 'flex';
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     }
 
     function shareSite() {
       const url = window.location.href;
-      if (navigator.share) {
-        navigator.share({ title: '아기 키보드 놀이', url: url });
-      } else {
-        navigator.clipboard.writeText(url);
-        alert("사이트 주소가 복사되었습니다! 친구에게 전달해 주세요.");
-      }
+      if (navigator.share) navigator.share({ title: '아기 키보드 놀이', url: url });
+      else { navigator.clipboard.writeText(url); alert("사이트 주소가 복사되었습니다!"); }
     }
 
-    function createVisuals(char) {
-      const el = document.createElement('div');
-      el.textContent = char;
-      el.className = 'letter';
+    function createVisuals(char, customX, customY) {
+      const el = document.createElement('div'); el.textContent = char; el.className = 'letter';
       el.style.color = colors[Math.floor(Math.random() * colors.length)];
-      const size = 6 + Math.random() * 12; 
-      el.style.fontSize = `${size}vw`;
-      el.style.left = `${10 + Math.random() * 80}%`;
-      el.style.top = `${10 + Math.random() * 80}%`;
+      el.style.fontSize = `${6 + Math.random() * 12}vw`;
+      el.style.left = customX ? `${customX}px` : `${10 + Math.random() * 80}%`;
+      el.style.top = customY ? `${customY}px` : `${10 + Math.random() * 80}%`;
       el.style.transform = `translate(-50%, -50%) rotate(${(Math.random() * 60) - 30}deg)`;
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 1500);
+      document.body.appendChild(el); setTimeout(() => el.remove(), 1500);
     }
 
-    function createFirework(x, y) {
-      const num = 12;
-      for (let i = 0; i < num; i++) {
-        const el = document.createElement('div');
-        el.textContent = fireworkEmojis[Math.floor(Math.random() * fireworkEmojis.length)];
-        el.style.position = 'absolute';
-        el.style.left = `${x}px`;
-        el.style.top = `${y}px`;
-        el.style.fontSize = '2rem';
-        el.style.pointerEvents = 'none';
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 100 + Math.random() * 100;
+    function createFirework(x, y, count) {
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div'); el.textContent = fireworkEmojis[Math.floor(Math.random() * fireworkEmojis.length)];
+        el.style.position = 'absolute'; el.style.left = `${x}px`; el.style.top = `${y}px`;
+        el.style.fontSize = isMobile ? '2.5rem' : '2rem'; el.style.pointerEvents = 'none';
+        const angle = Math.random() * Math.PI * 2, dist = (isMobile ? 150 : 100) + Math.random() * 100;
         el.animate([
           { transform: `translate(-50%, -50%) scale(0.5)`, opacity: 1 },
-          { transform: `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px)) scale(1.5)`, opacity: 0 }
+          { transform: `translate(calc(-50% + ${Math.cos(angle)*dist}px), calc(-50% + ${Math.sin(angle)*dist}px)) scale(1.8)`, opacity: 0 }
         ], { duration: 800, fill: 'forwards' });
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
+        document.body.appendChild(el); setTimeout(() => el.remove(), 1000);
       }
     }
 
     function createTrail(x, y) {
-      const el = document.createElement('div');
-      el.textContent = '⭐';
-      el.style.position = 'absolute';
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.style.fontSize = `${0.5 + Math.random() * 1}rem`;
-      el.style.pointerEvents = 'none';
-      el.style.opacity = '0.8';
-      el.animate([
-        { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.8 },
-        { transform: `translate(-50%, calc(-50% + 30px)) scale(0.1)`, opacity: 0 }
-      ], { duration: 400, fill: 'forwards' });
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 400);
+      const el = document.createElement('div'); el.textContent = '⭐';
+      el.style.position = 'absolute'; el.style.left = `${x}px`; el.style.top = `${y}px`;
+      el.style.fontSize = '1.2rem'; el.style.pointerEvents = 'none';
+      el.animate([{ opacity: 0.8 }, { transform: `translateY(20px)`, opacity: 0 }], { duration: 400 });
+      document.body.appendChild(el); setTimeout(() => el.remove(), 400);
     }
 
     function playTone() {
       if (!audioCtx) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(300 + Math.random() * 600, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(isMobile ? 400 + Math.random() * 400 : 300 + Math.random() * 600, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
       osc.connect(gain); gain.connect(audioCtx.destination);
       osc.start(); osc.stop(audioCtx.currentTime + 0.3);
     }
