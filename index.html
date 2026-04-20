@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>아기 한글 & 숫자 키보드 놀이 (진한 회색 배경)</title>
+  <style>
+    /* 배경을 깔끔한 진한 회색으로 변경 */
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background-color: #2b2b2b; /* 진한 회색 */
+      font-family: 'Malgun Gothic', sans-serif; 
+      user-select: none; 
+    }
+
+    #start-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #ffb74d; color: #333; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; font-weight: bold; z-index: 100; cursor: pointer; }
+    
+    .letter { position: absolute; font-weight: 900; pointer-events: none; animation: popOut 1.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards; }
+    @keyframes popOut {
+      0% { transform: translate(-50%, -50%) scale(0.1); opacity: 1; }
+      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+    }
+
+    /* 뒷배경 떠다니는 애니메이션 요소들 */
+    .bg-element {
+      position: absolute;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: -1;
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(110vh) rotate(0deg); }
+      100% { transform: translateY(-10vh) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="start-screen">화면을 터치하거나 클릭하세요!</div>
+  <script>
+    const startScreen = document.getElementById('start-screen');
+    let audioCtx;
+    let isStarted = false;
+
+    // 뒷배경 요소 생성
+    const bgEmojis = ['⭐', '🪐', '🌙', '☄️', '🌌', '🚀', '🛸', '✨', '🌍'];
+    for (let i = 0; i < 25; i++) {
+      const el = document.createElement('div');
+      el.textContent = bgEmojis[Math.floor(Math.random() * bgEmojis.length)];
+      el.className = 'bg-element';
+      el.style.left = `${Math.random() * 100}vw`;
+      el.style.animationDuration = `${20 + Math.random() * 30}s`;
+      el.style.animationDelay = `-${Math.random() * 30}s`;
+      el.style.fontSize = `${1 + Math.random() * 4}rem`;
+      document.body.appendChild(el);
+    }
+
+    startScreen.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startScreen.style.display = 'none';
+      isStarted = true;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    });
+
+    // 우클릭 메뉴 방지
+    window.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
+    const codeMap = {
+      'Digit1':'1', 'Digit2':'2', 'Digit3':'3', 'Digit4':'4', 'Digit5':'5', 'Digit6':'6', 'Digit7':'7', 'Digit8':'8', 'Digit9':'9', 'Digit0':'0',
+      'Numpad1':'1', 'Numpad2':'2', 'Numpad3':'3', 'Numpad4':'4', 'Numpad5':'5', 'Numpad6':'6', 'Numpad7':'7', 'Numpad8':'8', 'Numpad9':'9', 'Numpad0':'0',
+      'KeyQ':'ㅂ', 'KeyW':'ㅈ', 'KeyE':'ㄷ', 'KeyR':'ㄱ', 'KeyT':'ㅅ', 'KeyY':'ㅛ', 'KeyU':'ㅕ', 'KeyI':'ㅑ', 'KeyO':'ㅐ', 'KeyP':'ㅔ',
+      'KeyA':'ㅁ', 'KeyS':'ㄴ', 'KeyD':'ㅇ', 'KeyF':'ㄹ', 'KeyG':'ㅎ', 'KeyH':'ㅗ', 'KeyJ':'ㅓ', 'KeyK':'ㅏ', 'KeyL':'ㅣ',
+      'KeyZ':'ㅋ', 'KeyX':'ㅌ', 'KeyC':'ㅊ', 'KeyV':'ㅍ', 'KeyB':'ㅠ', 'KeyN':'ㅜ', 'KeyM':'ㅡ',
+      'Space': '⭐'
+    };
+
+    const randomEmojis = [
+      '🍕', '🎨', '🎸', '⚽', '🧸', '🌈', '🌻', '🍦', '🚁', '🐳',
+      '🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵',
+      '🍎', '🍓', '🍒', '🍉', '🍇', '🍌', '🍍', '🥝', '🍅', '🌽', '🥕',
+      '🚗', '🚕', '🚙', '🚌', '🚒', '🚓', '🚑', '🚜', '🚲', '🚀', '⛵', '🚂'
+    ];
+    const fireworkEmojis = ['✨', '💥', '🎇', '🎉', '🌟', '💫'];
+    const colors = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF', '#536DFE', '#448AFF', '#18FFFF', '#69F0AE', '#EEFF41', '#FFD740', '#FFAB40'];
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'F5' || e.key === 'F12' || !isStarted) return;
+      e.preventDefault();
+      let char = codeMap[e.code] || randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
+      createVisuals(char);
+      playTone();
+    });
+
+    window.addEventListener('mousedown', (e) => {
+      if (!isStarted) return;
+      createFirework(e.clientX, e.clientY);
+      playTone();
+    });
+
+    let lastTrailTime = 0;
+    window.addEventListener('mousemove', (e) => {
+      if (!isStarted) return;
+      const now = Date.now();
+      if (now - lastTrailTime > 30) {
+        createTrail(e.clientX, e.clientY);
+        lastTrailTime = now;
+      }
+    });
+
+    function createVisuals(char) {
+      const el = document.createElement('div');
+      el.textContent = char;
+      el.className = 'letter';
+      el.style.color = colors[Math.floor(Math.random() * colors.length)];
+      
+      const size = 6 + Math.random() * 12; 
+      el.style.fontSize = `${size}vw`;
+      
+      el.style.left = `${10 + Math.random() * 80}%`;
+      el.style.top = `${10 + Math.random() * 80}%`;
+      el.style.transform = `translate(-50%, -50%) rotate(${(Math.random() * 60) - 30}deg)`;
+
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1500);
+    }
+
+    function createFirework(x, y) {
+      const num = 10 + Math.floor(Math.random() * 5);
+      for (let i = 0; i < num; i++) {
+        const el = document.createElement('div');
+        el.textContent = fireworkEmojis[Math.floor(Math.random() * fireworkEmojis.length)];
+        el.style.position = 'absolute';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.fontSize = `${1.5 + Math.random() * 2}rem`;
+        el.style.pointerEvents = 'none';
+        
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 50 + Math.random() * 150;
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity;
+
+        el.animate([
+          { transform: `translate(-50%, -50%) scale(0.5)`, opacity: 1 },
+          { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(1.5)`, opacity: 0 }
+        ], {
+          duration: 600 + Math.random() * 400,
+          easing: 'cubic-bezier(0, .9, .57, 1)',
+          fill: 'forwards'
+        });
+
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+      }
+    }
+
+    function createTrail(x, y) {
+      const el = document.createElement('div');
+      el.textContent = '⭐';
+      el.style.position = 'absolute';
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.style.fontSize = `${0.5 + Math.random() * 1}rem`;
+      el.style.pointerEvents = 'none';
+      el.style.opacity = '0.8';
+      
+      el.animate([
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 0.8 },
+        { transform: `translate(-50%, calc(-50% + 30px)) scale(0.1)`, opacity: 0 }
+      ], {
+        duration: 400,
+        fill: 'forwards'
+      });
+
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 400);
+    }
+
+    function playTone() {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(300 + Math.random() * 600, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    }
+  </script>
+</body>
+</html>
